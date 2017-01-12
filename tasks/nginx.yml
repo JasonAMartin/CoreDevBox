@@ -1,0 +1,23 @@
+---
+# NGINX
+
+- name: NGINX | Remove Apache
+  apt: pkg=apache2 state=absent purge=yes
+
+- name: NGINX | Install NGINX
+  apt: pkg=nginx state=installed
+
+- name: NGINX | Copy Host Config
+  template: src={{ (item.config is defined) | ternary(item.config, '../files/nginx_site.conf') }} src=../files/nginx_site.conf dest=/etc/nginx/sites-available/{{ item.hostname }}.conf
+  with_items: "{{sites}}"
+
+- name: NGINX | Copy Server Config
+  template: src=../files/nginx.conf dest=/etc/nginx/nginx.conf
+
+- name: NGINX | Remove Default Configuration
+  file: path=/etc/nginx/sites-enabled/default state=absent
+
+- name: NGINX | Activate Hosts
+  file: src=/etc/nginx/sites-available/{{ item.hostname }}.conf dest=/etc/nginx/sites-enabled/{{ item.hostname }}.conf state=link
+  with_items: "{{sites}}"
+  notify: restart nginx

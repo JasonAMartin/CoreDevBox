@@ -1,0 +1,49 @@
+---
+- hosts: all
+  become: true
+  vars:
+    hostname: "Knightstorm"
+    dbuser: "kingdom"
+    dbpasswd: "eternal"
+    database: "DEVDB"
+    sites: [
+        {
+            hostname: "app.local",
+            document_root: "/vagrant/app/public"
+        },
+        {
+            hostname: "app-api.local",
+            document_root: "/vagrant/app-api/public"
+        }
+    ]
+    php_modules:
+      - php7.1-mysql
+      - php7.1-gd
+      - php-apcu
+      - php7.1-mcrypt
+      - php7.1-curl
+      - php7.1-intl
+      - php-memcached
+      - php7.1-mbstring
+      - php7.1-xml
+    php_configs: [
+        { option: "upload_max_filesize", value: "100M" },
+        { option: "post_max_size", value: "100M" }
+    ]
+  tasks:
+    - include: tasks/system.yml
+    - include: tasks/ohmyzsh.yml
+    - include: tasks/mariadb.yml
+    - include: tasks/php.yml
+    - include: tasks/php-fpm.yml
+    - include: tasks/nginx.yml
+    - include: tasks/nodejs.yml
+    - include: tasks/redis.yml
+    - include: tasks/java.yml
+  handlers:
+    - name: restart nginx
+      service: name=nginx state=restarted
+    - name: restart php7.1-fpm
+      service: name=php7.1-fpm state=restarted
+    - name: restart mysql
+      service: name=mysql state=restarted

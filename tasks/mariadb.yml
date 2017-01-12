@@ -1,0 +1,32 @@
+---
+- name: 1. Install MariaDB server package
+  apt: name=mariadb-server state=present
+  become: true
+
+- name: 2. Start Mysql Service
+  service: name=mysql state=started enabled=true
+  become: true
+
+- name: Install python Mysql package #required for mysql_db tasks
+  apt: name=python-mysqldb state=present
+  become: true
+
+- name: 3. Create a new database
+  mysql_db: name={{ database }} state=present collation=utf8_general_ci
+  become: true
+
+- name: 4. Create a database user
+  mysql_user: name={{ dbuser }} password={{ dbpasswd }} priv=*.*:ALL host=localhost state=present
+  become: true
+
+- name: 5a. Copy sample data
+  copy: src=dump.sql dest=/tmp/dump.sql
+  become: true
+
+- name: 5b. Insert sample data
+  shell: cat /tmp/dump.sql | mysql -u {{ dbuser }} -p{{ dbpasswd }} {{ database }}
+  become: true
+
+- name: 6a. Install MySQL extension for PHP
+  shell: apt-get -y install php-mysql
+  become: true
